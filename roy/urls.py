@@ -5,6 +5,7 @@ app_name = "roy"
 
 urlpatterns = [
     path('audio', audio,name="audio"),
-    path('audio_last', audio_last,name="audio_last"),
-    path('last', get_laste,name="last"),
+    path('audio_last', audio_online,name="audio_online"),
+    path('get_audio', get_laste,name="last"),
+    path('liste_des_audios', liste_audio,name="liste_audio"),
 ]

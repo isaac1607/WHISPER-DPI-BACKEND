@@ -40,7 +40,7 @@ def audio(request):
     return Response({"text": result["text"]})
 
 @api_view(['POST'])
-def audio_last(request):
+def audio_online(request):
     if 'audio' not in request.FILES:
         return Response({"error": "No audio file provided"}, status=400)
     print("Entrer")
@@ -50,7 +50,7 @@ def audio_last(request):
     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
     
     audio_file= open(file_path, "rb")
-    client = OpenAI(api_key = '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')
+    client = OpenAI(api_key = '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')
     print("Juste avant la transcription")
 
     transcript = client.audio.transcriptions.create(
@@ -59,17 +59,38 @@ def audio_last(request):
     )
     
     default_storage.delete(file_path)
-    print("Réponse")
-    print(transcript.text)
+    app = App()
+    app.text = transcript.text
+    app.audio = audio
+    app.save()
 
-    return Response({"text": transcript.text},status=status200)
+    audio_url =''
+    audio_url = request.build_absolute_uri(settings.MEDIA_URL + str(app.audio))
+
+    return Response({"text": transcript.text,"audio": audio_url, "id":audio.pk},status=status200)
 
 
 @api_view(['GET'])
 def get_laste(request):
-    app = App.objects.all().last()
-    if app == None or len(app.text) > 0:
-        return Response({"text": "","etat":0})
-    else:
-        return Response({"text": app.text,"etat":1})
+    try:
+        ide = request.GET.get('id')
+        app = App.objects.get(pk=ide)
+        audio_url =''
+        audio_url = request.build_absolute_uri(settings.MEDIA_URL + str(app.audio))
+        return Response({"text": app.text,"id":app.pk,"audio": audio_url},status=status200)
+    except:
+        return Response({"text": "Error id"},status=status500)
+
+
+@api_view(['GET'])
+def liste_audio(request):
+    try:
+        retour = []
+        for app in App.objects.all():
+            audio_url =''
+            audio_url = request.build_absolute_uri(settings.MEDIA_URL + str(app.audio))
+            retour.append({"text": app.text,"id":app.pk,"audio": audio_url})
+        return Response(retour,status=status200)
+    except:
+        return Response({"text": "Error id"},status=status500)
    
